@@ -1,0 +1,54 @@
+{
+  "name": "vef2-2021-h1-synilausn",
+  "version": "1.0.0",
+  "description": "Vefforritun 2, 20201: Hópverkefni 1, sýnilausn",
+  "main": "index.js",
+  "engines": {
+    "node": ">= 14"
+  },
+  "scripts": {
+    "dev": "nodemon ./src/app.js",
+    "start": "node ./src/app.js",
+    "lint": "eslint ./src --fix",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test-watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
+    "setup": "node ./src/setup/setup.js",
+    "create-data": "node ./src/data-setup/setup.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vefforritun/vef2-2021-h1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vefforritun/vef2-2021-h1/issues"
+  },
+  "homepage": "https://github.com/vefforritun/vef2-2021-h1#readme",
+  "devDependencies": {
+    "@jest/globals": "^26.6.2",
+    "concurrently": "^5.3.0",
+    "csv-writer": "^1.6.0",
+    "eslint": "^7.20.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "jest": "^26.6.3",
+    "node-fetch": "^2.6.1",
+    "nodemon": "^2.0.7"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "cloudinary": "^1.25.0",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.10.0",
+    "jsonwebtoken": "^8.5.1",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "pg": "^8.5.1",
+    "winston": "^3.3.3",
+    "xss": "^1.0.8"
+  }
+}

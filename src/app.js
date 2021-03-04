@@ -1,0 +1,36 @@
+import express from 'express';
+import dotenv from 'dotenv';
+
+import { router as apiRouter } from './api/index.js';
+import passport from './auth/passport.js';
+
+dotenv.config();
+
+const {
+  PORT: port = 3000,
+} = process.env;
+
+const app = express();
+
+app.use(express.json());
+app.use(passport.initialize());
+app.use(apiRouter);
+
+// app.use(cors);
+
+app.use((req, res, next) => { // eslint-disable-line
+  res.status(404).json({ error: 'Not found' });
+});
+app.use((err, req, res, next) => { // eslint-disable-line
+  console.error(err);
+
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid json' });
+  }
+
+  return res.status(500).json({ error: 'Internal server error' });
+});
+
+app.listen(port, () => {
+  console.info(`Server running at http://localhost:${port}/`);
+});

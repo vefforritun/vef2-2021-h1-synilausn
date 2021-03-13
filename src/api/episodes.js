@@ -1,6 +1,4 @@
-import { query, singleQuery, pagedQuery } from '../db.js';
-import { addPageMetadata } from '../utils/addPageMetadata.js';
-import { logger } from '../utils/logger.js';
+import { singleQuery } from '../db.js';
 
 export async function listEpisode(serieId, { params = {} } = {}) {
   const { season: seasonNumber, episode: episodeNumber } = params;

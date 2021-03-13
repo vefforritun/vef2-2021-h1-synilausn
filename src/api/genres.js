@@ -1,6 +1,5 @@
-import { query, singleQuery, pagedQuery } from '../db.js';
+import { pagedQuery } from '../db.js';
 import { addPageMetadata } from '../utils/addPageMetadata.js';
-import { logger } from '../utils/logger.js';
 
 export async function listGenres(req, res) {
   const { offset = 0, limit = 10 } = req.query;

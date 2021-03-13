@@ -2,16 +2,10 @@ import express from 'express';
 
 import { requireAuthentication, requireAdmin } from '../auth/passport.js';
 import { catchErrors } from '../utils/catchErrors.js';
-import {
-  notImplemented, returnResource, validatePagingQuerystring, validateResource, validationCheck,
-} from './utils.js';
 
 import {
   listSeries,
   listSerie,
-/*   createSerie,
-  updateSerie,
-  deleteSerie, */
 } from './series.js';
 
 import {
@@ -48,11 +42,19 @@ import {
   listUsers,
   listUser,
   updateUser,
-  currentUser,
-  updateCurrentUser,
 } from './users.js';
 
+import { pagingQuerystringValidator, validateResource, validationCheck } from '../validation/validators.js';
+
 export const router = express.Router();
+
+function notImplemented(req, res) {
+  return res.status(501).json({ error: 'not implemented (yet)' });
+}
+
+function returnResource(req, res) {
+  return res.json(req.resource);
+}
 
 router.get('/', (req, res) => res.json({
   tv: {
@@ -125,7 +127,7 @@ router.get('/', (req, res) => res.json({
 
 router.get(
   '/tv',
-  validatePagingQuerystring,
+  pagingQuerystringValidator,
   validationCheck,
   catchErrors(listSeries),
 );
@@ -137,7 +139,7 @@ router.get(
 );
 router.get(
   '/tv/:id/season',
-  validatePagingQuerystring,
+  pagingQuerystringValidator,
   validationCheck,
   catchErrors(listSeasons),
 );
@@ -155,7 +157,7 @@ router.get(
 );
 router.get(
   '/genres',
-  validatePagingQuerystring,
+  pagingQuerystringValidator,
   validationCheck,
   catchErrors(listGenres),
 );
@@ -164,6 +166,9 @@ router.post(
   '/tv',
   notImplemented,
 ); // , requireAdmin, createSerie);
+
+/* --- */
+
 router.patch('/tv/:id', notImplemented); // , requireAdmin, updateSerie);
 router.delete('/tv/:id', notImplemented); // , requireAdmin, deleteSerie);
 
@@ -185,7 +190,5 @@ router.delete('/tv/:id/season/:season/episode/:episode', requireAdmin, deleteEpi
 router.post('/genres', requireAdmin, createGenre);
 
 router.get('/users', requireAdmin, listUsers);
-router.get('/users/me', requireAuthentication, currentUser);
-router.patch('/users/me', requireAuthentication, updateCurrentUser);
 router.get('/users/:id', requireAdmin, listUser);
 router.patch('/users/:id', requireAdmin, updateUser);

@@ -281,3 +281,39 @@ export async function insertSerieGenre(serieId, genreId) {
 
   return null;
 }
+
+// TODO refactor
+export async function conditionalUpdate(table, id, fields, values) {
+  const filteredFields = fields.filter((i) => typeof i === 'string');
+  const filteredValues = values
+    .filter((i) => typeof i === 'string'
+      || typeof i === 'number'
+      || i instanceof Date);
+
+  if (filteredFields.length === 0) {
+    return false;
+  }
+
+  if (filteredFields.length !== filteredValues.length) {
+    throw new Error('fields and values must be of equal length');
+  }
+
+  // id is field = 1
+  const updates = filteredFields.map((field, i) => `${field} = $${i + 2}`);
+
+  const q = `
+    UPDATE ${table}
+      SET ${updates.join(', ')}
+    WHERE
+      id = $1
+    RETURNING *
+    `;
+
+  const queryValues = [id].concat(filteredValues);
+
+  logger.debug('Conditional update', q, queryValues);
+
+  const result = await query(q, queryValues);
+
+  return result;
+}

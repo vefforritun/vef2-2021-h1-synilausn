@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS episodes;
 DROP TABLE IF EXISTS seasons;
 DROP TABLE IF EXISTS series_genres;
@@ -50,4 +51,14 @@ CREATE TABLE episodes (
   serieId INTEGER NOT NULL, -- Tæknilega ekki þörf
   CONSTRAINT FK_episodes_season FOREIGN KEY (seasonId) REFERENCES seasons (id),
   CONSTRAINT FK_episodes_serie FOREIGN KEY (serieId) REFERENCES series (id)
+);
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(256) NOT NULL UNIQUE,
+  email VARCHAR(256) NOT NULL UNIQUE,
+  password VARCHAR(256) NOT NULL,
+  admin BOOLEAN DEFAULT false,
+  created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+  updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );

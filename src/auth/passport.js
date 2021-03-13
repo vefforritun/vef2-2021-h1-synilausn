@@ -1,15 +1,11 @@
 import passport from 'passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import jwt from 'jsonwebtoken';
 
 import {
-  comparePasswords,
-  findByUsername,
   findById,
 } from './users.js';
 
 const {
-  PORT: port = 3000,
   JWT_SECRET: jwtSecret,
   TOKEN_LIFETIME: tokenLifetime = 20,
   DATABASE_URL: databaseUrl,
@@ -76,6 +72,8 @@ export function requireAdmin(req, res, next) {
     },
   )(req, res, next);
 }
+
+export const tokenOptions = { expiresIn: tokenLifetime };
 
 export const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

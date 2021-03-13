@@ -149,7 +149,7 @@ Ef beðið er um einingu eða reynt að framkvæma aðgerð sem ekki er leyfi fy
   * `GET` skilar notanda, aðeins ef notandi sem framkvæmir er stjórnandi
   * `PATCH` breytir hvort notandi sé stjórnandi eða ekki, aðeins ef notandi sem framkvæmir er stjórnandi og er ekki að breyta sér sjálfum
 * `/users/register`
-  * `POST` staðfestir og býr til notanda. Skilar auðkenni og netfangi. Notandi sem búinn er til skal aldrei vera stjórnandi
+  * `POST` staðfestir og býr til notanda. Skilar auðkenni. Notandi sem búinn er til skal aldrei vera stjórnandi
 * `/users/login`
   * `POST` með netfangi og lykilorði skilar token ef gögn rétt
 * `/users/me`
@@ -178,6 +178,15 @@ Allar niðurstöður sem geta skilað mörgum færslum (fleiri en 10) skulu skil
 Ekki þarf að útfæra „týnt lykilorð“ virkni.
 
 Lausn skal keyra á Heroku.
+
+## Sýnilausn
+
+Hægt er að skoða sýnilausn á: `https://vef2-2021-h1-synilausn.herokuapp.com/`.
+
+Útfært:
+
+* Gögn færð inn með myndum
+* Óinnskráður notandi getur skoðað öll gögn
 
 ## Hópavinna
 
@@ -238,4 +247,5 @@ Sett verða fyrir tvö hópverkefni þar sem hvort um sig gildir 10%, samtals 20
 | Útgáfa | Lýsing |
 | 0.1    | _Fyrsta útgáfa_, ekki er búið að fullskilgreina vefþjónustuskil eða útbúa gögn í byrjun, stefnt á að verði komið 7.–8. febrúar. Nota skal tíma þangað til, til þess að finna hóp, skipta með sér verkum, ákveða samskipti, og skilgreina tímalínu fyrir vinnu á verkefninu. [Yfirferð í fyrirlestri 4](https://youtu.be/gQEFFKGumG0) |
 | 0.2    | Lýsing á gögnum, lýsing á þjónustum, mat, gögn |
+| 0.3    | Lagfæringar á lýsingu. Vísun á vefþjónustu sýnilausnar |
 |--------|--------|

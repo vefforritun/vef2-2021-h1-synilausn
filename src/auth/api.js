@@ -43,7 +43,6 @@ async function loginRoute(req, res) {
 
   const payload = { id: user.id };
   const token = jwt.sign(payload, jwtOptions.secretOrKey, tokenOptions);
-
   delete user.password;
 
   return res.json({
@@ -74,6 +73,7 @@ async function updateCurrentUserRoute(req, res) {
 
   if (!user) {
     // shouldn't happen
+    logger.error('Unable to update user by id', id);
     return res.status(500).json(null);
   }
 
@@ -107,7 +107,11 @@ router.post(
   catchErrors(loginRoute),
 );
 
-router.get('/users/me', requireAuthentication, catchErrors(currentUserRoute));
+router.get(
+  '/users/me',
+  requireAuthentication,
+  catchErrors(currentUserRoute),
+);
 
 router.patch(
   '/users/me',

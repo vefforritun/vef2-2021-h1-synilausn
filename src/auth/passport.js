@@ -5,13 +5,14 @@ import {
   findById,
 } from './users.js';
 
+// TODO env
+
 const {
   JWT_SECRET: jwtSecret,
-  TOKEN_LIFETIME: tokenLifetime = 20,
-  DATABASE_URL: databaseUrl,
+  TOKEN_LIFETIME: tokenLifetime = 3600,
 } = process.env;
 
-if (!jwtSecret || !databaseUrl) {
+if (!jwtSecret) {
   console.error('Vantar .env gildi');
   process.exit(1);
 }
@@ -50,6 +51,7 @@ export function requireAuthentication(req, res, next) {
   )(req, res, next);
 }
 
+// TODO too much replication from above
 export function requireAdmin(req, res, next) {
   return passport.authenticate(
     'jwt',
@@ -66,6 +68,11 @@ export function requireAdmin(req, res, next) {
         return res.status(401).json({ error });
       }
 
+      if (!user.admin) {
+        const error = 'insufficient authorization';
+        return res.status(401).json({ error });
+      }
+
       // Látum notanda vera aðgengilegan í rest af middlewares
       req.user = user;
       return next();
@@ -73,7 +80,7 @@ export function requireAdmin(req, res, next) {
   )(req, res, next);
 }
 
-export const tokenOptions = { expiresIn: tokenLifetime };
+export const tokenOptions = { expiresIn: parseInt(tokenLifetime, 10) };
 
 export const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

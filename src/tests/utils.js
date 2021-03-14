@@ -1,15 +1,22 @@
 import crypto from 'crypto';
 
+import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 
-const BASE_URL = 'http://localhost:3000';
+dotenv.config();
+
+const {
+  BASE_URL: baseUrl = 'http://localhost:3000',
+  ADMIN_USER: adminUser = '',
+  ADMIN_PASS: adminPass = '',
+} = process.env;
 
 export function randomValue() {
   return crypto.randomBytes(16).toString('hex');
 }
 
 export async function methodAndParse(method, path, data = null, token = null) {
-  const url = new URL(path, BASE_URL);
+  const url = new URL(path, baseUrl);
 
   const options = { headers: {} };
 
@@ -54,4 +61,25 @@ export async function loginAndReturnToken(data) {
   }
 
   return null;
+}
+
+export async function createRandomUserAndReturnWithToken() {
+  const rnd = randomValue();
+  const username = `user${rnd}`;
+  const email = `user${rnd}@example.org`;
+  const password = '1234567890';
+
+  const data = { username, password, email };
+  const { result } = await postAndParse('/users/register', data);
+  const token = await loginAndReturnToken({ username, password });
+
+  return {
+    user: result,
+    token,
+  };
+}
+
+export async function loginAsHardcodedAdminAndReturnToken() {
+  const token = await loginAndReturnToken({ username: adminUser, password: adminPass });
+  return token;
 }

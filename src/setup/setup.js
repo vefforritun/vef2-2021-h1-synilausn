@@ -57,6 +57,15 @@ async function schema() {
 }
 
 /**
+ * Les inn SQL skipanir eftir að skema er tilbúið.
+ */
+async function postSchemaSql() {
+  const schemaFile = join(path, SQL_DIR, 'post.sql');
+  const data = await readFile(schemaFile);
+  await query(data);
+}
+
+/**
  * Hjálparfall sem les CSV skrá með straumum. Gætum útfært sem „one-pass“:
  * lesið inn skrá og unnið með gögn jafnóðum, en það er flóknara vegna blöndu
  * strauma og promises.
@@ -233,6 +242,8 @@ async function main() {
   logger.info('Images uploaded');
   await schema();
   logger.info('Schema created');
+  await postSchemaSql();
+  logger.info('Post schema SQL run');
   await series();
   logger.info('Series & genres imported');
   await seasons();

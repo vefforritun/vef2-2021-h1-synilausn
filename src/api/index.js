@@ -1,7 +1,11 @@
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
 import express from 'express';
 
 import { requireAuthentication, requireAdmin } from '../auth/passport.js';
 import { catchErrors } from '../utils/catchErrors.js';
+import { readFile } from '../utils/fs-helpers.js';
 
 import {
   listSeries,
@@ -44,7 +48,11 @@ import {
   updateUser,
 } from './users.js';
 
-import { pagingQuerystringValidator, validateResource, validationCheck } from '../validation/validators.js';
+import {
+  adminValidator, pagingQuerystringValidator, validateResource, validationCheck,
+} from '../validation/validators.js';
+
+const path = dirname(fileURLToPath(import.meta.url));
 
 export const router = express.Router();
 
@@ -56,74 +64,10 @@ function returnResource(req, res) {
   return res.json(req.resource);
 }
 
-router.get('/', (req, res) => res.json({
-  tv: {
-    series: {
-      href: '/tv',
-      methods: ['GET', 'POST'],
-    },
-    serie: {
-      href: '/tv/{id}',
-      methods: ['GET', 'PATCH', 'DELETE'],
-    },
-    rate: {
-      href: '/tv/{id}/rate',
-      methods: ['POST', 'PATCH', 'DELETE'],
-    },
-    state: {
-      href: '/tv/{id}/state',
-      methods: ['POST', 'PATCH', 'DELETE'],
-    },
-  },
-  seasons: {
-    seasons: {
-      href: '/tv/{id}/season',
-      methods: ['GET', 'POST'],
-    },
-    season: {
-      href: '/tv/{id}/season/{season}',
-      methods: ['GET', 'DELETE'],
-    },
-  },
-  episodes: {
-    episodes: {
-      href: '/tv/{id}/season/{season}/episode',
-      methods: ['POST'],
-    },
-    episode: {
-      href: '/tv/{id}/season/{season}/episode/{episode}',
-      methods: ['GET', 'DELETE'],
-    },
-  },
-  genres: {
-    genres: {
-      href: '/genres',
-      methods: ['GET', 'POST'],
-    },
-  },
-  users: {
-    users: {
-      href: '/users',
-      methods: ['GET'],
-    },
-    user: {
-      href: '/users/{id}',
-      methods: ['GET', 'PATCH'],
-    },
-    register: {
-      href: '/users/register',
-      methods: ['POST'],
-    },
-    login: {
-      href: '/users/login',
-      methods: ['POST'],
-    },
-    me: {
-      href: '/users/me',
-      methods: ['GET', 'PATCH'],
-    },
-  },
-}));
+router.get('/', async (req, res) => {
+  const indexJson = await readFile(join(path, './index.json'));
+  res.json(JSON.parse(indexJson));
+});
 
 router.get(
   '/tv',
@@ -162,15 +106,7 @@ router.get(
   catchErrors(listGenres),
 );
 
-router.post(
-  '/tv',
-  notImplemented,
-); // , requireAdmin, createSerie);
-
-/* --- */
-
-router.patch('/tv/:id', notImplemented); // , requireAdmin, updateSerie);
-router.delete('/tv/:id', notImplemented); // , requireAdmin, deleteSerie);
+/* user auth routes */
 
 router.post('/tv/:id/rate', requireAuthentication, createRating);
 router.patch('/tv/:id/rate', requireAuthentication, updateRating);
@@ -178,6 +114,41 @@ router.delete('/tv/:id/rate', requireAuthentication, deleteRating);
 router.post('/tv/:id/state', requireAuthentication, createState);
 router.patch('/tv/:id/state', requireAuthentication, updateState);
 router.delete('/tv/:id/state', requireAuthentication, deleteState);
+
+/* admin auth routes */
+
+router.get(
+  '/users',
+  requireAdmin,
+  pagingQuerystringValidator,
+  validationCheck,
+  listUsers,
+);
+
+router.get(
+  '/users/:id',
+  requireAdmin,
+  validateResource(listUser),
+  validationCheck,
+  returnResource,
+);
+
+router.patch(
+  '/users/:id',
+  requireAdmin,
+  validateResource(listUser),
+  adminValidator,
+  validationCheck,
+  updateUser,
+);
+
+router.post(
+  '/tv',
+  notImplemented,
+); // , requireAdmin, createSerie);
+
+router.patch('/tv/:id', notImplemented); // , requireAdmin, updateSerie);
+router.delete('/tv/:id', notImplemented); // , requireAdmin, deleteSerie);
 
 router.post('/tv/:id/season', requireAdmin, createSeason);
 
@@ -188,7 +159,3 @@ router.post('/tv/:id/season/:season/episode', requireAdmin, createEpisode);
 router.delete('/tv/:id/season/:season/episode/:episode', requireAdmin, deleteEpisode);
 
 router.post('/genres', requireAdmin, createGenre);
-
-router.get('/users', requireAdmin, listUsers);
-router.get('/users/:id', requireAdmin, listUser);
-router.patch('/users/:id', requireAdmin, updateUser);

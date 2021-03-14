@@ -109,7 +109,7 @@ describe('users', () => {
     const { result, status } = await postAndParse('/users/login', data);
 
     expect(status).toBe(200);
-    expect(result.expiresIn).toBe(EXPIRES_IN);
+    expect(result.expiresIn).toBe(parseInt(EXPIRES_IN, 10));
     expect(result.token.length).toBeGreaterThanOrEqual(20); // 20 is random
     expect(result.user.admin).toBe(false);
     expect(result.user.email).toBe(email);

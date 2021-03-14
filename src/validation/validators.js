@@ -123,6 +123,28 @@ export const usernameAndPaswordValidValidator = body('username')
     return Promise.resolve();
   });
 
+export const adminValidator = body('admin')
+  .exists()
+  .withMessage('admin is required')
+  .isBoolean()
+  .withMessage('admin must be a boolean')
+  .bail()
+  .custom(async (admin, { req: { user, params } = {} }) => {
+    let valid = false;
+
+    const userToChange = parseInt(params.id, 10);
+    const currentUser = user.id;
+
+    if (Number.isInteger(userToChange) && userToChange !== currentUser) {
+      valid = true;
+    }
+
+    if (!valid) {
+      return Promise.reject(new LoginError('admin cannot change self'));
+    }
+    return Promise.resolve();
+  });
+
 export function validationCheck(req, res, next) {
   const validation = validationResult(req);
 

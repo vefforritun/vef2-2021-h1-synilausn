@@ -33,26 +33,22 @@ export const nameValidator = body('name')
   .isLength({ min: 1, max: 256 })
   .withMessage('name is required, max 128 characters');
 
-export const emailValidator = body('email')
-  .if((value, { req }) => {
-    if (!value && req.method === 'PATCH') {
-      return false;
-    }
+const isPatchingAllowAsOptional = (value, { req }) => {
+  if (!value && req.method === 'PATCH') {
+    return false;
+  }
 
-    return true;
-  })
+  return true;
+};
+
+export const emailValidator = body('email')
+  .if(isPatchingAllowAsOptional)
   .isLength({ min: 1, max: 256 })
   .isEmail()
   .withMessage('email is required, max 256 characters');
 
 export const passwordValidator = body('password')
-  .if((value, { req }) => {
-    if (!value && req.method === 'PATCH') {
-      return false;
-    }
-
-    return true;
-  })
+  .if(isPatchingAllowAsOptional)
   .isLength({ min: 10, max: 256 })
   .withMessage('password is required, min 10 characters, max 256 characters');
 
@@ -102,6 +98,13 @@ export const usernameAndPaswordValidValidator = body('username')
     return Promise.resolve();
   });
 
+export const inProductionValidator = body('inproduction')
+  .if(isPatchingAllowAsOptional)
+  .exists()
+  .withMessage('inproduction is required')
+  .isBoolean({ strict: false })
+  .withMessage('inproduction must be a boolean');
+
 export const adminValidator = body('admin')
   .exists()
   .withMessage('admin is required')
@@ -133,10 +136,41 @@ export const airDateOptionalValidator = body('airDate')
   .isDate()
   .withMessage('airDate must be a date');
 
+export const airDateValidator = body('airDate')
+  .if(isPatchingAllowAsOptional)
+  .isDate()
+  .withMessage('airDate must be a date');
+
 export const overviewOptionalValidator = body('overview')
   .optional()
   .isString({ min: 0 })
   .withMessage('overview must be a string');
+
+export const taglineOptionalValidator = body('tagline')
+  .optional()
+  .isString({ min: 0 })
+  .withMessage('tagline must be a string');
+
+export const descriptionValidator = body('description')
+  .if(isPatchingAllowAsOptional)
+  .isString({ min: 1 })
+  .withMessage('description must be a string');
+
+export const languageValidator = body('language')
+  .if(isPatchingAllowAsOptional)
+  .isString({ min: 2, max: 2 })
+  .withMessage('language must be a string of length 2');
+
+export const networkOptionalValidator = body('network')
+  .optional()
+  .isString({ min: 0 })
+  .withMessage('network must be a string');
+
+// TODO refactor optional text validators into one generic one
+export const urlOptionalValidator = body('url')
+  .optional()
+  .isString({ min: 0 })
+  .withMessage('url must be a string');
 
 export const seasonIdValidator = param('seasonId')
   .isInt({ min: 1 })
@@ -196,6 +230,18 @@ export const seasonValidators = [
   overviewOptionalValidator,
   serieIdValidator,
   posterValidator,
+];
+
+export const serieValidators = [
+  nameValidator,
+  airDateValidator,
+  inProductionValidator,
+  taglineOptionalValidator,
+  posterValidator,
+  descriptionValidator,
+  languageValidator,
+  networkOptionalValidator,
+  urlOptionalValidator,
 ];
 
 export function atLeastOneBodyValueValidator(fields) {

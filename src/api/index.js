@@ -11,6 +11,9 @@ import { readFile } from '../utils/fs-helpers.js';
 import {
   listSeries,
   listSerie,
+  createSerie,
+  deleteSerie,
+  updateSerie,
 } from './series.js';
 
 import {
@@ -56,9 +59,11 @@ import {
   nameValidator,
   pagingQuerystringValidator,
   seasonIdValidator,
-  seasonValidators,
   serieIdValidator,
+  seasonValidators,
+  serieValidators,
   validateResource,
+  atLeastOneBodyValueValidator,
 } from '../validation/validators.js';
 import { validationCheck } from '../validation/helpers.js';
 
@@ -108,14 +113,14 @@ router.get(
 );
 
 router.get(
-  '/tv/:id',
+  '/tv/:serieId',
   validateResource(listSerie),
   validationCheck,
   returnResource,
 );
 
 router.get(
-  '/tv/:id/season',
+  '/tv/:serieId/season',
   pagingQuerystringValidator,
   validationCheck,
   catchErrors(listSeasons),
@@ -218,15 +223,37 @@ router.delete(
   catchErrors(deleteSeason),
 );
 
+router.post(
+  '/tv/',
+  requireAdmin,
+  withMulter,
+  serieValidators,
+  validationCheck,
+  catchErrors(createSerie),
+);
+
+router.delete(
+  '/tv/:serieId',
+  requireAdmin,
+  serieIdValidator.bail(),
+  validateResource(listSerie),
+  validationCheck,
+  catchErrors(deleteSerie),
+);
+
+router.patch(
+  '/tv/:serieId',
+  requireAdmin,
+  serieIdValidator.bail(),
+  serieValidators,
+  atLeastOneBodyValueValidator(['name', 'airDate', 'inProduction', 'tagline', 'image', 'description', 'language', 'network', 'url']),
+  validationCheck,
+  catchErrors(updateSerie),
+);
+
 /* */
 
-router.post(
-  '/tv',
-  notImplemented,
-); // , requireAdmin, createSerie);
-
 router.patch('/tv/:id', notImplemented); // , requireAdmin, updateSerie);
-router.delete('/tv/:id', notImplemented); // , requireAdmin, deleteSerie);
 
 /* user auth routes */
 

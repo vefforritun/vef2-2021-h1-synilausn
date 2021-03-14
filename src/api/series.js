@@ -1,5 +1,8 @@
-import { query, singleQuery, pagedQuery } from '../db.js';
+import {
+  query, singleQuery, pagedQuery, insertSerie, deleteQuery,
+} from '../db.js';
 import { addPageMetadata } from '../utils/addPageMetadata.js';
+import { uploadImage } from '../utils/cloudinary.js';
 import { logger } from '../utils/logger.js';
 
 async function serieGenres(id) {
@@ -72,7 +75,8 @@ export async function listSeries(req, res) {
   return res.json(seriesWithPage);
 }
 
-export async function listSerie(id) {
+export async function listSerie(_, { params = {} } = {}) {
+  const { serieId: id } = params;
   /*
   TODO:
    * meðal einkunn
@@ -100,4 +104,74 @@ export async function listSerie(id) {
   serie.seasons = seasons;
 
   return serie;
+}
+
+export async function createSerie(req, res) {
+  const {
+    name,
+    airDate = null,
+    inProduction,
+    tagline = null,
+    description,
+    language,
+    network = null,
+    url = null,
+  } = req.body;
+  const { path: imagePath } = req.file;
+
+  // TODO refactor into helper in cloudinary.js
+  let poster;
+  try {
+    const uploadResult = await uploadImage(imagePath);
+    if (!uploadResult || !uploadResult.secure_url) {
+      throw new Error('no secure_url from cloudinary upload');
+    }
+    poster = uploadResult.secure_url;
+  } catch (e) {
+    logger.error('Unable to upload file to cloudinary', e);
+    return res.status(500).end();
+  }
+
+  const insertSeasonResult = await insertSerie({
+    name,
+    airDate,
+    inProduction,
+    tagline,
+    image: poster,
+    description,
+    language,
+    network,
+    url,
+  });
+
+  if (insertSeasonResult) {
+    return res.status(201).json(insertSeasonResult);
+  }
+
+  return res.status(500).end();
+}
+
+export async function deleteSerie(req, res) {
+  const { serieId } = req.params;
+
+  try {
+    const deletionRowCount = await deleteQuery(
+      'DELETE FROM series WHERE id = $1;',
+      [serieId],
+    );
+
+    if (deletionRowCount === 0) {
+      return res.status(404).end();
+    }
+
+    return res.status(200).json({});
+  } catch (e) {
+    logger.error(`unable to delete serie "${serieId}"`, e);
+  }
+
+  return res.status(500).json(null);
+}
+
+export async function updateSerie(req, res) {
+
 }

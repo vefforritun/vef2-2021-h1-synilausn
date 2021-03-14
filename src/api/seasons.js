@@ -30,7 +30,7 @@ async function seasonEpisodes(serieId, seasonId) {
 
 export async function listSeasons(req, res) {
   const { offset = 0, limit = 10 } = req.query;
-  const { id } = req.params;
+  const { serieId: id } = req.params;
 
   const categories = await pagedQuery(
     `SELECT

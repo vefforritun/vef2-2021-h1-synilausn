@@ -1,32 +1,10 @@
-import {
-  body, query, param, validationResult,
-} from 'express-validator';
+import { body, query, param } from 'express-validator';
 
 import { comparePasswords, findByEmail, findByUsername } from '../auth/users.js';
 
+import { resourceExists } from './helpers.js';
 import { LoginError } from '../errors.js';
 import { logger } from '../utils/logger.js';
-
-export function resourceExists(fn) {
-  return (value, { req }) => fn(value, req)
-    .then((resource) => {
-      if (!resource) {
-        return Promise.reject(new Error('not found'));
-      }
-      req.resource = resource;
-      return Promise.resolve();
-    })
-    .catch((error) => {
-      if (error.message === 'not found') {
-        // This we just handled
-        return Promise.reject(error);
-      }
-
-      // This is something we did *not* handle, treat as 500 error
-      logger.warn('Error from middleware:', error);
-      return Promise.reject(new Error('server error'));
-    });
-}
 
 export const pagingQuerystringValidator = [
   query('offset')
@@ -42,9 +20,6 @@ export const pagingQuerystringValidator = [
 export function validateResource(fetchResource) {
   return [
     param('id')
-      .isInt({ min: 0 })
-      .withMessage('param "id" must be a positive integer, larger than 0'),
-    param('id')
       .custom(resourceExists(fetchResource))
       .withMessage('not found'),
   ];
@@ -53,6 +28,10 @@ export function validateResource(fetchResource) {
 export const usernameValidator = body('username')
   .isLength({ min: 1, max: 256 })
   .withMessage('username is required, max 256 characters');
+
+export const nameValidator = body('name')
+  .isLength({ min: 1, max: 256 })
+  .withMessage('name is required, max 128 characters');
 
 export const emailValidator = body('email')
   .if((value, { req }) => {
@@ -140,41 +119,84 @@ export const adminValidator = body('admin')
     }
 
     if (!valid) {
-      return Promise.reject(new LoginError('admin cannot change self'));
+      return Promise.reject(new Error('admin cannot change self'));
     }
     return Promise.resolve();
   });
 
-export function validationCheck(req, res, next) {
-  const validation = validationResult(req);
+export const numberValidator = body('number')
+  .isInt({ min: 1 })
+  .withMessage('number must be an integer larger than 0');
 
-  if (!validation.isEmpty()) {
-    const notFoundError = validation.errors.find((error) => error.msg === 'not found');
-    const serverError = validation.errors.find((error) => error.msg === 'server error');
+export const airDateOptionalValidator = body('airDate')
+  .optional()
+  .isDate()
+  .withMessage('airDate must be a date');
 
-    // We loose the actual error object of LoginError, match with error message
-    // TODO brittle, better way?
-    const loginError = validation.errors.find((error) => error.msg === 'username or password incorrect');
+export const overviewOptionalValidator = body('overview')
+  .optional()
+  .isString({ min: 0 })
+  .withMessage('overview must be a string');
 
-    let status = 400;
+export const seasonIdValidator = param('seasonId')
+  .isInt({ min: 1 })
+  .withMessage('seasonId must be an integer larger than 0');
+  // TODO custom that makes sure it exists
 
-    if (serverError) {
-      status = 500;
-    } else if (notFoundError) {
-      status = 404;
-    } else if (loginError) {
-      status = 401;
+export const serieIdValidator = param('serieId')
+  .isInt({ min: 1 })
+  .withMessage('serieId must be an integer larger than 0');
+  // TODO custom that makes sure it exists
+
+export const episodeIdValidator = param('episodeId')
+  .isInt({ min: 1 })
+  .withMessage('episodeId must be an integer larger than 0');
+  // TODO custom that makes sure it exists
+
+const MIMETYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+];
+
+function validateImageMimetype(mimetype) {
+  return MIMETYPES.indexOf(mimetype.toLowerCase()) >= 0;
+}
+
+export const posterValidator = body('image')
+  .custom(async (image, { req = {} }) => {
+    const { file: { path, mimetype } = {} } = req;
+
+    if (!path && !mimetype) {
+      return Promise.reject(new Error('image is required'));
     }
 
-    // Strecthing the express-validator library...
-    // @see auth/api.js
-    const validationErrorsWithoutSkip = validation.errors.filter((error) => error.msg !== 'skip');
+    if (!validateImageMimetype(mimetype)) {
+      const error = `Mimetype ${mimetype} is not legal. `
+        + `Only ${MIMETYPES.join(', ')} are accepted`;
+      return Promise.reject(new Error(error));
+    }
 
-    return res.status(status).json({ errors: validationErrorsWithoutSkip });
-  }
+    return Promise.resolve();
+  });
 
-  return next();
-}
+export const episodeValidators = [
+  nameValidator,
+  numberValidator,
+  airDateOptionalValidator,
+  overviewOptionalValidator,
+  seasonIdValidator,
+  serieIdValidator,
+];
+
+export const seasonValidators = [
+  nameValidator,
+  numberValidator,
+  airDateOptionalValidator,
+  overviewOptionalValidator,
+  serieIdValidator,
+  posterValidator,
+];
 
 export function atLeastOneBodyValueValidator(fields) {
   return body()

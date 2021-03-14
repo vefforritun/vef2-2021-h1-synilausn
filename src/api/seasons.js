@@ -1,5 +1,8 @@
-import { query, singleQuery, pagedQuery } from '../db.js';
+import {
+  query, singleQuery, pagedQuery, insertSeason, deleteQuery,
+} from '../db.js';
 import { addPageMetadata } from '../utils/addPageMetadata.js';
+import { uploadImage } from '../utils/cloudinary.js';
 import { logger } from '../utils/logger.js';
 
 async function seasonEpisodes(serieId, seasonId) {
@@ -50,8 +53,9 @@ export async function listSeasons(req, res) {
   return res.json(categoriesWithPage);
 }
 
-export async function listSeason(serieId, { params = {} } = {}) {
-  const { season: seasonNumber } = params;
+export async function listSeason(_, { params = {} } = {}) {
+  // TODO number/id mismatch
+  const { serieId, seasonId: seasonNumber } = params;
 
   if (!seasonNumber) {
     return null;
@@ -81,10 +85,86 @@ export async function listSeason(serieId, { params = {} } = {}) {
   return season;
 }
 
-export async function createSeason() {
+export async function createSeason(req, res) {
+  const { serieId } = req.params;
+  const {
+    name, number, overview = null, airDate = null,
+  } = req.body;
+  const { path: imagePath } = req.file;
+
+  // TODO refactor into helper in cloudinary.js
+  let poster;
+  try {
+    const uploadResult = await uploadImage(imagePath);
+    if (!uploadResult || !uploadResult.secure_url) {
+      throw new Error('no secure_url from cloudinary upload');
+    }
+    poster = uploadResult.secure_url;
+  } catch (e) {
+    logger.error('Unable to upload file to cloudinary', e);
+    return res.status(500).end();
+  }
+
+  const insertSeasonResult = await insertSeason({
+    name,
+    number,
+    airDate,
+    overview,
+    poster,
+    serieId,
+  });
+
+  if (insertSeasonResult) {
+    return res.status(201).json(insertSeasonResult);
+  }
+
+  return res.status(500).end();
+}
+
+export async function seasonIdBySeasonNumber(serieId, seasonNumber) {
+  try {
+    const season = await singleQuery(
+      `
+        SELECT
+          id
+        FROM
+          seasons
+        WHERE
+          serieId = $1 AND "number" = $2
+      `,
+      [serieId, seasonNumber],
+    );
+
+    if (season && season.id) {
+      return season.id;
+    }
+  } catch (e) {
+    logger.error(`unable to find seasonId based on serieId "${serieId}" and seasonNumber "${seasonNumber}"`, e);
+  }
+
   return null;
 }
 
-export async function deleteSeason() {
-  return null;
+export async function deleteSeason(req, res) {
+  const { serieId, seasonId: seasonNumber } = req.params;
+
+  // TODO error handling
+  const actualSeasonId = await seasonIdBySeasonNumber(serieId, seasonNumber);
+
+  try {
+    const deletionRowCount = await deleteQuery(
+      'DELETE FROM seasons WHERE serieId = $1 AND id = $2;',
+      [serieId, actualSeasonId],
+    );
+
+    if (deletionRowCount === 0) {
+      return res.status(404).end();
+    }
+
+    return res.status(200).json({});
+  } catch (e) {
+    logger.error(`unable to delete season "${seasonNumber}" in serie "${serieId}"`, e);
+  }
+
+  return res.status(500).json(null);
 }

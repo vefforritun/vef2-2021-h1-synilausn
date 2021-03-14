@@ -89,6 +89,12 @@ export async function singleQuery(_query, values = []) {
   return null;
 }
 
+export async function deleteQuery(_query, values = []) {
+  const result = await query(_query, values);
+
+  return result.rowCount;
+}
+
 export async function pagedQuery(
   sqlQuery,
   values = [],
@@ -242,7 +248,7 @@ export async function insertEpisode({
     const result = await query(q, values);
     return result.rows[0];
   } catch (e) {
-    logger.error('Error inserting season', e);
+    logger.error('Error inserting episode', e);
   }
 
   return null;

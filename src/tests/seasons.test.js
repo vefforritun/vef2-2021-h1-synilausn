@@ -27,10 +27,10 @@ describe('series', () => {
   });
 
   test('GET /tv/1/season with offset 10 limit 10', async () => {
-    const { result } = await fetchAndParse('/tv/1/season/?offset=10&limit=10');
+    const { result } = await fetchAndParse('/tv/1/season/?offset=100&limit=10');
 
     expect(result.limit).toBe(10);
-    expect(result.offset).toBe(10);
+    expect(result.offset).toBe(100);
     expect(result.items.length).toBe(0);
     expect(result._links).toBeDefined();
     expect(result._links.self).toBeDefined();

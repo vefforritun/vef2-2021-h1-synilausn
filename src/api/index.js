@@ -2,6 +2,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import express from 'express';
+import multer from 'multer';
 
 import { requireAuthentication, requireAdmin } from '../auth/passport.js';
 import { catchErrors } from '../utils/catchErrors.js';
@@ -49,8 +50,38 @@ import {
 } from './users.js';
 
 import {
-  adminValidator, pagingQuerystringValidator, validateResource, validationCheck,
+  adminValidator,
+  episodeIdValidator,
+  episodeValidators,
+  nameValidator,
+  pagingQuerystringValidator,
+  seasonIdValidator,
+  seasonValidators,
+  serieIdValidator,
+  validateResource,
 } from '../validation/validators.js';
+import { validationCheck } from '../validation/helpers.js';
+
+const MULTER_TEMP_DIR = './temp';
+
+function withMulter(req, res, next) {
+  multer({ dest: MULTER_TEMP_DIR })
+    .single('image')(req, res, (err) => {
+      if (err) {
+        if (err.message === 'Unexpected field') {
+          const errors = [{
+            field: 'image',
+            error: 'Unable to read image',
+          }];
+          return res.status(400).json({ errors });
+        }
+
+        return next(err);
+      }
+
+      return next();
+    });
+}
 
 const path = dirname(fileURLToPath(import.meta.url));
 
@@ -75,45 +106,44 @@ router.get(
   validationCheck,
   catchErrors(listSeries),
 );
+
 router.get(
   '/tv/:id',
   validateResource(listSerie),
   validationCheck,
   returnResource,
 );
+
 router.get(
   '/tv/:id/season',
   pagingQuerystringValidator,
   validationCheck,
   catchErrors(listSeasons),
 );
+
 router.get(
-  '/tv/:id/season/:season',
+  '/tv/:serieId/season/:seasonId',
   validateResource(listSeason),
   validationCheck,
   returnResource,
 );
+
 router.get(
-  '/tv/:id/season/:season/episode/:episode',
+  '/tv/:serieId/season/:seasonId/episode/:episodeId',
+  serieIdValidator,
+  seasonIdValidator,
+  episodeIdValidator,
   validateResource(listEpisode),
   validationCheck,
   returnResource,
 );
+
 router.get(
   '/genres',
   pagingQuerystringValidator,
   validationCheck,
   catchErrors(listGenres),
 );
-
-/* user auth routes */
-
-router.post('/tv/:id/rate', requireAuthentication, createRating);
-router.patch('/tv/:id/rate', requireAuthentication, updateRating);
-router.delete('/tv/:id/rate', requireAuthentication, deleteRating);
-router.post('/tv/:id/state', requireAuthentication, createState);
-router.patch('/tv/:id/state', requireAuthentication, updateState);
-router.delete('/tv/:id/state', requireAuthentication, deleteState);
 
 /* admin auth routes */
 
@@ -139,8 +169,56 @@ router.patch(
   validateResource(listUser),
   adminValidator,
   validationCheck,
-  updateUser,
+  catchErrors(updateUser),
 );
+
+router.post(
+  '/genres',
+  requireAdmin,
+  nameValidator,
+  validationCheck,
+  catchErrors(createGenre),
+);
+
+router.post(
+  '/tv/:serieId/season/:seasonId/episode',
+  requireAdmin,
+  episodeValidators,
+  validationCheck,
+  catchErrors(createEpisode),
+);
+
+router.delete(
+  '/tv/:serieId/season/:seasonId/episode/:episodeId',
+  requireAdmin,
+  episodeIdValidator,
+  serieIdValidator,
+  seasonIdValidator.bail(),
+  validateResource(listEpisode),
+  validationCheck,
+  catchErrors(deleteEpisode),
+);
+
+router.post(
+  '/tv/:serieId/season/',
+  requireAdmin,
+  withMulter,
+  seasonValidators,
+  validationCheck,
+  catchErrors(createSeason),
+);
+
+router.delete(
+  '/tv/:serieId/season/:seasonId',
+  requireAdmin,
+  serieIdValidator,
+  seasonIdValidator.bail(),
+  validateResource(listSeason),
+  validationCheck,
+  catchErrors(deleteSeason),
+);
+
+/* */
 
 router.post(
   '/tv',
@@ -150,12 +228,11 @@ router.post(
 router.patch('/tv/:id', notImplemented); // , requireAdmin, updateSerie);
 router.delete('/tv/:id', notImplemented); // , requireAdmin, deleteSerie);
 
-router.post('/tv/:id/season', requireAdmin, createSeason);
+/* user auth routes */
 
-router.delete('/tv/:id/season/:season', deleteSeason);
-
-router.post('/tv/:id/season/:season/episode', requireAdmin, createEpisode);
-
-router.delete('/tv/:id/season/:season/episode/:episode', requireAdmin, deleteEpisode);
-
-router.post('/genres', requireAdmin, createGenre);
+router.post('/tv/:id/rate', requireAuthentication, createRating);
+router.patch('/tv/:id/rate', requireAuthentication, updateRating);
+router.delete('/tv/:id/rate', requireAuthentication, deleteRating);
+router.post('/tv/:id/state', requireAuthentication, createState);
+router.patch('/tv/:id/state', requireAuthentication, updateState);
+router.delete('/tv/:id/state', requireAuthentication, deleteState);

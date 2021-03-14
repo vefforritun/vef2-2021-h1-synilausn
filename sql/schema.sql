@@ -20,14 +20,15 @@ CREATE TABLE series (
 
 CREATE TABLE genres (
   id SERIAL PRIMARY KEY,
+  -- TODO should be unique...
   name VARCHAR(128) NOT NULL
 );
 
 CREATE TABLE series_genres (
   serie INTEGER NOT NULL,
   genre INTEGER NOT NULL,
-  CONSTRAINT FK_seriesGenres_serie FOREIGN KEY (serie) REFERENCES series (id),
-  CONSTRAINT FK_seriesGenres_genre FOREIGN KEY (genre) REFERENCES genres (id)
+  CONSTRAINT FK_seriesGenres_serie FOREIGN KEY (serie) REFERENCES series (id) ON DELETE CASCADE,
+  CONSTRAINT FK_seriesGenres_genre FOREIGN KEY (genre) REFERENCES genres (id) ON DELETE CASCADE
 );
 
 CREATE TABLE seasons (
@@ -38,7 +39,7 @@ CREATE TABLE seasons (
   overview TEXT,
   poster VARCHAR(255) NOT NULL,
   serieId INTEGER NOT NULL,
-  CONSTRAINT FK_series_serie FOREIGN KEY (serieId) REFERENCES series (id)
+  CONSTRAINT FK_series_serie FOREIGN KEY (serieId) REFERENCES series (id) ON DELETE CASCADE
 );
 
 CREATE TABLE episodes (
@@ -49,9 +50,11 @@ CREATE TABLE episodes (
   overview TEXT,
   seasonId INTEGER NOT NULL,
   serieId INTEGER NOT NULL, -- Tæknilega ekki þörf
-  CONSTRAINT FK_episodes_season FOREIGN KEY (seasonId) REFERENCES seasons (id),
-  CONSTRAINT FK_episodes_serie FOREIGN KEY (serieId) REFERENCES series (id)
+  CONSTRAINT FK_episodes_season FOREIGN KEY (seasonId) REFERENCES seasons (id) ON DELETE CASCADE,
+  CONSTRAINT FK_episodes_serie FOREIGN KEY (serieId) REFERENCES series (id) ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX idx_episode_season_serie ON episodes("number", seasonId, serieId);
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,

@@ -1,5 +1,8 @@
-import { pagedQuery } from '../db.js';
+import xss from 'xss';
+
+import { pagedQuery, singleQuery } from '../db.js';
 import { addPageMetadata } from '../utils/addPageMetadata.js';
+import { logger } from '../utils/logger.js';
 
 export async function listGenres(req, res) {
   const { offset = 0, limit = 10 } = req.query;
@@ -23,5 +26,26 @@ export async function listGenres(req, res) {
   return res.json(genresWithPage);
 }
 
-export const createGenre = [
-];
+export async function createGenre(req, res) {
+  const { name } = req.body;
+
+  try {
+    // TODO refactor, use db.js insertGenre
+    const newGenre = await singleQuery(
+      `
+        INSERT INTO
+          genres (name)
+        VALUES
+          ($1)
+        RETURNING
+          id, name
+      `,
+      [xss(name)],
+    );
+    return res.status(201).json(newGenre);
+  } catch (e) {
+    logger.error(`unable to create genre "${name}"`, e);
+  }
+
+  return res.status(500).json(null);
+}

@@ -16,8 +16,8 @@ import {
   usernameAndPaswordValidValidator,
   usernameDoesNotExistValidator,
   usernameValidator,
-  validationCheck,
 } from '../validation/validators.js';
+import { validationCheck } from '../validation/helpers.js';
 
 export const router = express.Router();
 

@@ -1,5 +1,6 @@
+import xss from 'xss';
 import {
-  query, singleQuery, pagedQuery, insertSerie, deleteQuery,
+  query, singleQuery, pagedQuery, insertSerie, deleteQuery, conditionalUpdate,
 } from '../db.js';
 import { addPageMetadata } from '../utils/addPageMetadata.js';
 import { uploadImage } from '../utils/cloudinary.js';
@@ -172,6 +173,61 @@ export async function deleteSerie(req, res) {
   return res.status(500).json(null);
 }
 
-export async function updateSerie(req, res) {
+// TODO move to utils
+function isString(s) {
+  return typeof s === 'string';
+}
 
+export async function updateSerie(req, res) {
+  const { serieId: id } = req.params;
+  const { body } = req;
+  const { file: { path: imagePath } = {} } = req;
+
+  const fields = [
+    isString(body.name) ? 'name' : null,
+    isString(body.airdate) ? 'air_date' : null,
+    isString(body.inproduction) ? 'in_production' : null,
+    isString(body.tagline) ? 'tagline' : null,
+    isString(body.description) ? 'description' : null,
+    isString(body.language) ? 'language' : null,
+    isString(body.network) ? 'network' : null,
+    isString(body.url) ? 'url' : null,
+  ];
+
+  const values = [
+    isString(body.name) ? xss(body.name) : null,
+    isString(body.airdate) ? xss(body.airdate) : null,
+    isString(body.inproduction) ? xss(body.inproduction) : null,
+    isString(body.tagline) ? xss(body.tagline) : null,
+    isString(body.description) ? xss(body.description) : null,
+    isString(body.language) ? xss(body.language) : null,
+    isString(body.network) ? xss(body.network) : null,
+    isString(body.url) ? xss(body.url) : null,
+  ];
+
+  if (imagePath) {
+    // TODO refactor into helper in cloudinary.js, same as above
+    let poster;
+    try {
+      const uploadResult = await uploadImage(imagePath);
+      if (!uploadResult || !uploadResult.secure_url) {
+        throw new Error('no secure_url from cloudinary upload');
+      }
+      poster = uploadResult.secure_url;
+    } catch (e) {
+      logger.error('Unable to upload file to cloudinary', e);
+      return res.status(500).end();
+    }
+
+    fields.push('image');
+    values.push(poster);
+  }
+
+  const result = await conditionalUpdate('series', id, fields, values);
+
+  if (!result || !result.rows[0]) {
+    return res.status(400).json({ error: 'Nothing to update' });
+  }
+
+  return res.status(200).json(result.rows[0]);
 }

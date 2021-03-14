@@ -4,8 +4,8 @@ import { test, describe, expect } from '@jest/globals';
 import {
   createRandomUserAndReturnWithToken,
   deleteAndParse,
-  getRandomInt,
   loginAsHardcodedAdminAndReturnToken,
+  patchAndParse,
   postAndParse,
   randomValue,
 } from './utils.js';
@@ -91,4 +91,31 @@ describe('tv series admin', () => {
     expect(deleteStatus).toBe(200);
     expect(deleteResult).toEqual({});
   });
+
+  test('PATCH /tv/:serieId, invalid data', async () => {
+    const token = await loginAsHardcodedAdminAndReturnToken();
+    expect(token).toBeTruthy();
+
+    const data = null;
+
+    const { result, status } = await patchAndParse('/tv/1', data, token);
+
+    expect(status).toBe(400);
+    expect(result.errors[0].msg).toBe('require at least one value of: name, airDate, inProduction, tagline, image, description, language, network, url');
+  });
+
+  test('PATCH /tv/:serieId, name', async () => {
+    const token = await loginAsHardcodedAdminAndReturnToken();
+    expect(token).toBeTruthy();
+
+    const name = 'xxx';
+    const data = { name };
+
+    const { result, status } = await patchAndParse('/tv/1', data, token);
+
+    expect(status).toBe(200);
+    expect(result.name).toBe(name);
+  });
+
+  // TODO test more patching stuff here
 });

@@ -92,10 +92,6 @@ const path = dirname(fileURLToPath(import.meta.url));
 
 export const router = express.Router();
 
-function notImplemented(req, res) {
-  return res.status(501).json({ error: 'not implemented (yet)' });
-}
-
 function returnResource(req, res) {
   return res.json(req.resource);
 }
@@ -244,16 +240,13 @@ router.delete(
 router.patch(
   '/tv/:serieId',
   requireAdmin,
+  withMulter,
   serieIdValidator.bail(),
   serieValidators,
   atLeastOneBodyValueValidator(['name', 'airDate', 'inProduction', 'tagline', 'image', 'description', 'language', 'network', 'url']),
   validationCheck,
   catchErrors(updateSerie),
 );
-
-/* */
-
-router.patch('/tv/:id', notImplemented); // , requireAdmin, updateSerie);
 
 /* user auth routes */
 

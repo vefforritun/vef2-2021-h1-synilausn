@@ -317,7 +317,7 @@ export async function conditionalUpdate(table, id, fields, values) {
 
   const queryValues = [id].concat(filteredValues);
 
-  logger.debug('Conditional update', q, queryValues);
+  console.info('Conditional update', q, queryValues);
 
   const result = await query(q, queryValues);
 

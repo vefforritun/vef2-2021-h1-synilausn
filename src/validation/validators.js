@@ -29,10 +29,6 @@ export const usernameValidator = body('username')
   .isLength({ min: 1, max: 256 })
   .withMessage('username is required, max 256 characters');
 
-export const nameValidator = body('name')
-  .isLength({ min: 1, max: 256 })
-  .withMessage('name is required, max 128 characters');
-
 const isPatchingAllowAsOptional = (value, { req }) => {
   if (!value && req.method === 'PATCH') {
     return false;
@@ -40,6 +36,11 @@ const isPatchingAllowAsOptional = (value, { req }) => {
 
   return true;
 };
+
+export const nameValidator = body('name')
+  .if(isPatchingAllowAsOptional)
+  .isLength({ min: 1, max: 256 })
+  .withMessage('name is required, max 128 characters');
 
 export const emailValidator = body('email')
   .if(isPatchingAllowAsOptional)
@@ -200,6 +201,10 @@ function validateImageMimetype(mimetype) {
 export const posterValidator = body('image')
   .custom(async (image, { req = {} }) => {
     const { file: { path, mimetype } = {} } = req;
+
+    if (!path && !mimetype && req.method === 'PATCH') {
+      return Promise.resolve();
+    }
 
     if (!path && !mimetype) {
       return Promise.reject(new Error('image is required'));

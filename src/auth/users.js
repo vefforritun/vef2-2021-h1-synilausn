@@ -90,6 +90,7 @@ function isInt(i) {
   return i !== '' && Number.isInteger(Number(i));
 }
 
+// TODO move to utils
 function isString(s) {
   return typeof s === 'string';
 }

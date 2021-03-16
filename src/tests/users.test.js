@@ -200,4 +200,13 @@ describe('users', () => {
     expect(newResult.username).toBe(username);
     expect(newResult.password).toBeUndefined();
   });
+
+  test('Create user that already exists (admin)', async () => {
+    const data = { username: 'admin', password: 'x'.repeat(10), email: 'admin@example.org' };
+    const { result, status } = await postAndParse('/users/register', data);
+
+    expect(status).toBe(400);
+    expect(result.errors.length).toBe(1);
+    expect(result.errors[0].msg).toEqual('username already exists');
+  });
 });

@@ -14,10 +14,12 @@ const basePath = dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 
 const {
-  BASE_URL: baseUrl = 'http://localhost:3000',
+  BASE_URL = 'http://localhost:3000',
   ADMIN_USER: adminUser = '',
   ADMIN_PASS: adminPass = '',
 } = process.env;
+
+export const baseUrl = BASE_URL;
 
 export function randomValue() {
   return crypto.randomBytes(16).toString('hex');

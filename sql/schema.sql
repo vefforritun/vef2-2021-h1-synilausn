@@ -1,9 +1,12 @@
+DROP TABLE IF EXISTS users_series_state;
+DROP TABLE IF EXISTS users_series_rating;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS episodes;
 DROP TABLE IF EXISTS seasons;
 DROP TABLE IF EXISTS series_genres;
 DROP TABLE IF EXISTS genres;
 DROP TABLE IF EXISTS series;
+DROP TYPE IF EXISTS userSerieState;
 
 CREATE TABLE series (
   id SERIAL PRIMARY KEY,
@@ -65,3 +68,27 @@ CREATE TABLE users (
   created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
   updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
+
+CREATE TABLE users_series_rating (
+  id SERIAL PRIMARY KEY,
+  "user" INTEGER NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating >= 0 AND rating <= 5),
+  serieId INTEGER NOT NULL,
+  CONSTRAINT FK_series_serie FOREIGN KEY (serieId) REFERENCES series (id) ON DELETE CASCADE,
+  CONSTRAINT "user" FOREIGN KEY ("user") REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_users_series_rating ON users_series_rating("user", serieId);
+
+CREATE TYPE userSerieState AS ENUM ('want to watch', 'watching', 'watched');
+
+CREATE TABLE users_series_state(
+  id SERIAL PRIMARY KEY,
+  "user" INTEGER NOT NULL,
+  state userSerieState NOT NULL,
+  serieId INTEGER NOT NULL,
+  CONSTRAINT FK_series_serie FOREIGN KEY (serieId) REFERENCES series (id) ON DELETE CASCADE,
+  CONSTRAINT "user" FOREIGN KEY ("user") REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_users_series_state ON users_series_state("user", serieId);

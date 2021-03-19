@@ -51,6 +51,24 @@ export function requireAuthentication(req, res, next) {
   )(req, res, next);
 }
 
+export function addUserIfAuthenticated(req, res, next) {
+  return passport.authenticate(
+    'jwt',
+    { session: false },
+    (err, user) => {
+      if (err) {
+        return next(err);
+      }
+
+      if (user) {
+        req.user = user;
+      }
+
+      return next();
+    },
+  )(req, res, next);
+}
+
 // TODO too much replication from above
 export function requireAdmin(req, res, next) {
   return passport.authenticate(

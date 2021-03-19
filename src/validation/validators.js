@@ -17,11 +17,20 @@ export const pagingQuerystringValidator = [
     .withMessage('query parameter "limit" must be an int, larger than 0'),
 ];
 
-export function validateResource(fetchResource) {
+export function validateResourceExists(fetchResource) {
   return [
     param('id')
       .custom(resourceExists(fetchResource))
       .withMessage('not found'),
+  ];
+}
+
+export function validateResourceNotExists(fetchResource) {
+  return [
+    param('id')
+      .not()
+      .custom(resourceExists(fetchResource))
+      .withMessage('already exists'),
   ];
 }
 
@@ -248,6 +257,14 @@ export const serieValidators = [
   networkOptionalValidator,
   urlOptionalValidator,
 ];
+
+export const validateRating = body('rating')
+  .isIn([0, 1, 2, 3, 4, 5])
+  .withMessage('rating must be an integer, one of 0, 1, 2, 3, 4, 5');
+
+export const validateState = body('state')
+  .isIn(['want to watch', 'watching', 'watched'])
+  .withMessage('state must be one of "want to watch", "watching", "watched"');
 
 export function atLeastOneBodyValueValidator(fields) {
   return body()

@@ -5,6 +5,8 @@ import {
 import { addPageMetadata } from '../utils/addPageMetadata.js';
 import { uploadImage } from '../utils/cloudinary.js';
 import { logger } from '../utils/logger.js';
+import { getSerieRatingForUser } from './rating.js';
+import { getSerieStateForUser } from './state.js';
 
 async function serieGenres(id) {
   let genres = [];
@@ -76,20 +78,32 @@ export async function listSeries(req, res) {
   return res.json(seriesWithPage);
 }
 
-export async function listSerie(_, { params = {} } = {}) {
-  const { serieId: id } = params;
-  /*
-  TODO:
-   * meðal einkunn
-   * fjöldi einkunna
-  */
+export async function listSerie(_, req) {
+  const { serieId: id } = req.params;
+
   const serie = await singleQuery(
     `
       SELECT
-        id, name, air_date, in_production, tagline, image, description, language, network, url
+        series.id AS id,
+        series.name AS name,
+        series.air_date AS air_date,
+        series.in_production AS in_production,
+        series.tagline AS tagline,
+        series.image AS image,
+        series.description AS description,
+        series.language AS language,
+        series.network AS network,
+        series.url AS url,
+        COALESCE(ROUND(AVG(users_series_rating.rating), 2), 0) AS averagerating,
+        COUNT(users_series_rating.serieId) AS ratingcount
       FROM
         series
-      WHERE id = $1
+      LEFT JOIN
+        users_series_rating ON users_series_rating.serieId = series.id
+      WHERE
+        series.id = $1
+      GROUP BY
+        series.id
     `,
     [id],
   );
@@ -98,8 +112,28 @@ export async function listSerie(_, { params = {} } = {}) {
     return null;
   }
 
+  if (serie.averagerating) {
+    serie.averagerating = parseFloat(serie.averagerating);
+  }
+
+  if (serie.ratingcount) {
+    serie.ratingcount = parseInt(serie.ratingcount, 10);
+  }
+
   const genres = await serieGenres(id);
   const seasons = await serieSeasons(id);
+
+  if (req.user && req.user.id) {
+    const rating = await getSerieRatingForUser(id, req.user.id);
+    if (rating) {
+      serie.rating = rating.rating;
+    }
+
+    const state = await getSerieStateForUser(id, req.user.id);
+    if (state) {
+      serie.state = state.state;
+    }
+  }
 
   serie.genres = genres;
   serie.seasons = seasons;

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 import multer from 'multer';
 
-import { requireAuthentication, requireAdmin } from '../auth/passport.js';
+import { requireAuthentication, requireAdmin, addUserIfAuthenticated } from '../auth/passport.js';
 import { catchErrors } from '../utils/catchErrors.js';
 import { readFile } from '../utils/fs-helpers.js';
 
@@ -38,12 +38,14 @@ import {
   createRating,
   updateRating,
   deleteRating,
+  listRating,
 } from './rating.js';
 
 import {
   createState,
   updateState,
   deleteState,
+  listState,
 } from './state.js';
 
 import {
@@ -62,8 +64,11 @@ import {
   serieIdValidator,
   seasonValidators,
   serieValidators,
-  validateResource,
+  validateResourceExists,
+  validateResourceNotExists,
   atLeastOneBodyValueValidator,
+  validateRating,
+  validateState,
 } from '../validation/validators.js';
 import { validationCheck } from '../validation/helpers.js';
 
@@ -110,7 +115,8 @@ router.get(
 
 router.get(
   '/tv/:serieId',
-  validateResource(listSerie),
+  addUserIfAuthenticated,
+  validateResourceExists(listSerie),
   validationCheck,
   returnResource,
 );
@@ -124,7 +130,7 @@ router.get(
 
 router.get(
   '/tv/:serieId/season/:seasonId',
-  validateResource(listSeason),
+  validateResourceExists(listSeason),
   validationCheck,
   returnResource,
 );
@@ -134,7 +140,7 @@ router.get(
   serieIdValidator,
   seasonIdValidator,
   episodeIdValidator,
-  validateResource(listEpisode),
+  validateResourceExists(listEpisode),
   validationCheck,
   returnResource,
 );
@@ -159,7 +165,7 @@ router.get(
 router.get(
   '/users/:id',
   requireAdmin,
-  validateResource(listUser),
+  validateResourceExists(listUser),
   validationCheck,
   returnResource,
 );
@@ -167,7 +173,7 @@ router.get(
 router.patch(
   '/users/:id',
   requireAdmin,
-  validateResource(listUser),
+  validateResourceExists(listUser),
   adminValidator,
   validationCheck,
   catchErrors(updateUser),
@@ -195,7 +201,7 @@ router.delete(
   episodeIdValidator,
   serieIdValidator,
   seasonIdValidator.bail(),
-  validateResource(listEpisode),
+  validateResourceExists(listEpisode),
   validationCheck,
   catchErrors(deleteEpisode),
 );
@@ -214,7 +220,7 @@ router.delete(
   requireAdmin,
   serieIdValidator,
   seasonIdValidator.bail(),
-  validateResource(listSeason),
+  validateResourceExists(listSeason),
   validationCheck,
   catchErrors(deleteSeason),
 );
@@ -232,7 +238,7 @@ router.delete(
   '/tv/:serieId',
   requireAdmin,
   serieIdValidator.bail(),
-  validateResource(listSerie),
+  validateResourceExists(listSerie),
   validationCheck,
   catchErrors(deleteSerie),
 );
@@ -250,9 +256,66 @@ router.patch(
 
 /* user auth routes */
 
-router.post('/tv/:id/rate', requireAuthentication, createRating);
-router.patch('/tv/:id/rate', requireAuthentication, updateRating);
-router.delete('/tv/:id/rate', requireAuthentication, deleteRating);
-router.post('/tv/:id/state', requireAuthentication, createState);
-router.patch('/tv/:id/state', requireAuthentication, updateState);
-router.delete('/tv/:id/state', requireAuthentication, deleteState);
+router.post(
+  '/tv/:serieId/rate',
+  requireAuthentication,
+  serieIdValidator.bail(),
+  validateResourceExists(listSerie),
+  validateResourceNotExists(listRating),
+  validateRating,
+  validationCheck,
+  catchErrors(createRating),
+);
+
+router.patch(
+  '/tv/:serieId/rate',
+  requireAuthentication,
+  serieIdValidator.bail(),
+  validateResourceExists(listSerie),
+  validateResourceExists(listRating),
+  validateRating,
+  validationCheck,
+  catchErrors(updateRating),
+);
+
+router.delete(
+  '/tv/:serieId/rate',
+  requireAuthentication,
+  serieIdValidator.bail(),
+  validateResourceExists(listSerie),
+  validateResourceExists(listRating),
+  validationCheck,
+  catchErrors(deleteRating),
+);
+
+router.post(
+  '/tv/:serieId/state',
+  requireAuthentication,
+  serieIdValidator.bail(),
+  validateResourceExists(listSerie),
+  validateResourceNotExists(listState),
+  validateState,
+  validationCheck,
+  catchErrors(createState),
+);
+
+router.patch(
+  '/tv/:serieId/state',
+  requireAuthentication,
+  serieIdValidator.bail(),
+  validateResourceExists(listSerie),
+  validateResourceExists(listState),
+  validateState,
+  validationCheck,
+  catchErrors(updateState),
+);
+
+router.delete(
+  '/tv/:serieId/state',
+  requireAuthentication,
+  serieIdValidator.bail(),
+  validateResourceExists(listSerie),
+  validateResourceExists(listState),
+  validationCheck,
+  catchErrors(deleteState),
+);

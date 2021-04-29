@@ -7,12 +7,16 @@ import { logger } from '../utils/logger.js';
 
 dotenv.config();
 
+/**
+ * Hjálparföll fyrir notendur, uppfletting, búa til, uppfæra.
+ */
+
 const {
   BCRYPT_ROUNDS: bcryptRounds = 1,
 } = process.env;
 
 export async function createUser(username, email, password) {
-  const hashedPassword = await bcrypt.hash(password, bcryptRounds);
+  const hashedPassword = await bcrypt.hash(password, parseInt(bcryptRounds, 10));
 
   const q = `
     INSERT INTO
@@ -109,7 +113,7 @@ export async function updateUser(id, password, email) {
   let hashedPassword = null;
 
   if (password) {
-    hashedPassword = await bcrypt.hash(password, bcryptRounds);
+    hashedPassword = await bcrypt.hash(password, parseInt(bcryptRounds, 10));
   }
 
   const values = [

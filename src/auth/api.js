@@ -19,6 +19,11 @@ import {
 } from '../validation/validators.js';
 import { validationCheck } from '../validation/helpers.js';
 
+/**
+ * Skilgreinir API fyrir nýskráningu, innskráningu notanda, ásamt því að skila
+ * upplýsingum um notanda og uppfæra þær.
+ */
+
 export const router = express.Router();
 
 async function registerRoute(req, res) {

@@ -14,7 +14,7 @@ const basePath = dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 
 const {
-  BASE_URL = 'http://localhost:3000',
+  BASE_URL = 'http://localhost:5000',
   ADMIN_USER: adminUser = '',
   ADMIN_PASS: adminPass = '',
 } = process.env;

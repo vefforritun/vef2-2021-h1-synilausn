@@ -5,7 +5,10 @@ import {
   findById,
 } from './users.js';
 
-// TODO env
+/**
+ * Passport stillingar og middleware til að athuga hvort notandi sé innsrkáður
+ * og/eða stjórnandi.
+ */
 
 const {
   JWT_SECRET: jwtSecret,

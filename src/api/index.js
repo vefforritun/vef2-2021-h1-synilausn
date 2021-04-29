@@ -72,8 +72,18 @@ import {
 } from '../validation/validators.js';
 import { validationCheck } from '../validation/helpers.js';
 
+/**
+ * Langt skjal! En hér erum við að útbúa hverja og einasta route (fyrir utan
+ * auth) í API. Notar declerative validation sem er öll skilgreind í
+ * `/src/validation`.
+ */
+
+// TODO færa í .env
 const MULTER_TEMP_DIR = './temp';
 
+/**
+ * Hjálparfall til að bæta multer við route.
+ */
 function withMulter(req, res, next) {
   multer({ dest: MULTER_TEMP_DIR })
     .single('image')(req, res, (err) => {
@@ -93,18 +103,31 @@ function withMulter(req, res, next) {
     });
 }
 
-const path = dirname(fileURLToPath(import.meta.url));
-
 export const router = express.Router();
 
 function returnResource(req, res) {
   return res.json(req.resource);
 }
 
+// Sækjum yfirlit yfir API úr index.json og sendum beint út
 router.get('/', async (req, res) => {
+  const path = dirname(fileURLToPath(import.meta.url));
   const indexJson = await readFile(join(path, './index.json'));
   res.json(JSON.parse(indexJson));
 });
+
+/**
+ * Hér fylga allar skilgreiningar á routes, þær fylgja eftirfarandi mynstri:
+ *
+ * router.HTTP_METHOD(
+ *  ROUTE_WITH_PARAM,
+ *  VALIDATOR_MIDDLEWARE_1,
+ *  ...
+ *  VALIDATOR_MIDDLEWARE_N,
+ *  validationCheck, // Sendir validation villur, ef einhverjar
+ *  RESULT, // Eitthvað sem sendir svar til client ef allt OK
+ * );
+ */
 
 router.get(
   '/tv',

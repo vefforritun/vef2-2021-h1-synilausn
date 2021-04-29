@@ -2,6 +2,13 @@ import { validationResult } from 'express-validator';
 
 import { logger } from '../utils/logger.js';
 
+/**
+ * Checks to see if there are validation errors or returns next middlware if not.
+ * @param {object} req HTTP request
+ * @param {object} res HTTP response
+ * @param {function} next Next middleware
+ * @returns Next middleware or validation errors.
+ */
 export function validationCheck(req, res, next) {
   const validation = validationResult(req);
 
@@ -33,6 +40,13 @@ export function validationCheck(req, res, next) {
   return next();
 }
 
+/**
+ * Checks if resource exists by running a lookup function for that resource. If
+ * the resource exists, the function should return the resource, it'll be added
+ * to the request object under `resource`.
+ * @param {function} fn Function to lookup the resource
+ * @returns {Promise<undefined|Error>} Rejected error if resource does not exist
+ */
 export function resourceExists(fn) {
   return (value, { req }) => fn(value, req)
     .then((resource) => {

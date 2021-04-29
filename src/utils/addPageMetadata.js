@@ -7,6 +7,16 @@ const {
   BASE_URL: baseUrl = '',
 } = process.env;
 
+/**
+ * Bætir paging upplýsingum við hlut.
+ *
+ * @param {object} obj Hlutur sem bæta á paging gögnum við, tekið afrit af hlut.
+ * @param {string} path Relative slóð á hlut, grunnslóð er bætt við
+ * @param {number} param2.offset Offset á síðu
+ * @param {number} param2.limit Limit á síðu
+ * @param {number} param2.length Stærð síðu
+ * @returns
+ */
 export function addPageMetadata(
   obj,
   path,

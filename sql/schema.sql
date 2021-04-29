@@ -1,3 +1,4 @@
+-- TODO ætti e.t.v. að vera í sér scriptu svo við droppum ekki „óvart“
 DROP TABLE IF EXISTS users_series_state;
 DROP TABLE IF EXISTS users_series_rating;
 DROP TABLE IF EXISTS users;
@@ -7,6 +8,9 @@ DROP TABLE IF EXISTS series_genres;
 DROP TABLE IF EXISTS genres;
 DROP TABLE IF EXISTS series;
 DROP TYPE IF EXISTS userSerieState;
+
+-- Allir foreign key constraints eru skilgreindir með „ON DELETE CASCADE“ þ.a. þeim færslum sem
+-- vísað er í verður *eytt* þegar gögnum sem vísa í þær er eytt
 
 CREATE TABLE series (
   id SERIAL PRIMARY KEY,
@@ -57,6 +61,7 @@ CREATE TABLE episodes (
   CONSTRAINT FK_episodes_serie FOREIGN KEY (serieId) REFERENCES series (id) ON DELETE CASCADE
 );
 
+-- Þrenndin (þáttanúmer, seasonId, serieId) á að vera unique
 CREATE UNIQUE INDEX idx_episode_season_serie ON episodes("number", seasonId, serieId);
 
 CREATE TABLE users (
@@ -78,6 +83,7 @@ CREATE TABLE users_series_rating (
   CONSTRAINT "user" FOREIGN KEY ("user") REFERENCES users (id) ON DELETE CASCADE
 );
 
+-- Notandi á ekki að geta búið til fleiri en eitt rating per seríu
 CREATE UNIQUE INDEX idx_users_series_rating ON users_series_rating("user", serieId);
 
 CREATE TYPE userSerieState AS ENUM ('want to watch', 'watching', 'watched');
@@ -91,4 +97,5 @@ CREATE TABLE users_series_state(
   CONSTRAINT "user" FOREIGN KEY ("user") REFERENCES users (id) ON DELETE CASCADE
 );
 
+-- Notandi á ekki að geta búið til fleiri en eitt state per seríu
 CREATE UNIQUE INDEX idx_users_series_state ON users_series_state("user", serieId);

@@ -7,6 +7,11 @@ import {
   exists, readFile, writeFile,
 } from '../utils/fs-helpers.js';
 
+/**
+ * Útbýr tengingar við nokkrar aðferðir í TheMovieDb API.
+ * Keyrir allt í gegnum cache lag sem vistar svör í `/.cache` til að minnka
+ * köll í API og hraða fyrir endurtekin köll.
+ */
 export class MovieDb {
   constructor({
     cacheDir, imageDir, logger, token,

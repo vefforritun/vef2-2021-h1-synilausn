@@ -6,6 +6,10 @@ import { resourceExists } from './helpers.js';
 import { LoginError } from '../errors.js';
 import { logger } from '../utils/logger.js';
 
+/**
+ * Collection of validators based on express-validator
+ */
+
 export const pagingQuerystringValidator = [
   query('offset')
     .optional()

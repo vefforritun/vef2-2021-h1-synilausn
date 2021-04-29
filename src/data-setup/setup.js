@@ -29,6 +29,13 @@ if (!tmdbToken) {
   process.exit(-1);
 }
 
+/**
+ * Sækir 20 vinsælustu sjónvarpsþættina á themoviedatabase, sækir síðan öll
+ * season fyrir hvern, og að lokum alla þætti í hverju season. Að lokum er allt
+ * vistað í CSV skrár.
+ * Fyrir myndir, þá er myndin vistuð jafnóðum í myndamöppu og vísað í heiti
+ * hennar í gögnum.
+ */
 async function main() {
   const cacheDirResult = await prepareDir(resolvedCacheDir);
   const imageDirResult = await prepareDir(resolvedImageDir);
